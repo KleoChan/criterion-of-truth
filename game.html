@@ -1,0 +1,1615 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Критерии истины</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#07070f; --panel:#0d1220; --card:#131a2c; --line:#222e48;
+  --text:#e8eef6; --muted:#8b9bb0; --accent:#7aa2ff; --accent-dim:rgba(122,162,255,.12);
+  --gold:#d8a840; --gold-dim:rgba(216,168,64,.14); --green:#4ade80; --red:#e05a5a;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100%;background:var(--bg);color:var(--text);font-family:'Inter',system-ui,sans-serif;line-height:1.55}
+body{display:flex;align-items:center;justify-content:center;padding:1rem;overflow-x:hidden}
+h1,h2,h3{font-family:'Cormorant Garamond',Georgia,serif;font-weight:600}
+#app{
+  width:min(980px,97vw);min-height:min(660px,94vh);
+  background:radial-gradient(ellipse at 50% 0%,#101a30 0%,#07070f 70%);
+  border:1px solid var(--line);border-radius:14px;position:relative;overflow:hidden;
+  box-shadow:0 0 60px rgba(80,120,255,.12),0 0 120px rgba(0,0,0,.8);
+  display:flex;flex-direction:column;
+}
+#app::before{content:'';position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 40%,rgba(0,0,20,.45) 100%);}
+.screen{display:none;flex:1;flex-direction:column;position:relative;z-index:2}
+.screen.on{display:flex}
+.bar{display:flex;align-items:center;gap:.8rem;padding:.7rem 1.1rem;border-bottom:1px solid var(--line);background:rgba(7,7,15,.7);backdrop-filter:blur(10px);z-index:10}
+.bar .title{font-family:'Cormorant Garamond',serif;font-size:1.15rem;color:var(--gold);flex:1}
+.bar .meta{font-size:.72rem;color:var(--muted);display:flex;gap:.9rem;align-items:center}
+.bar .meta b{color:var(--text);font-weight:500}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;background:var(--accent);color:#07070f;border:none;padding:.6rem 1.3rem;border-radius:8px;font-weight:600;font-size:.88rem;cursor:pointer;transition:.15s;font-family:'Inter',sans-serif}
+.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
+.btn:disabled{opacity:.35;cursor:not-allowed;transform:none;filter:none}
+.btn.ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+.btn.ghost:hover{border-color:var(--accent);background:var(--accent-dim)}
+.btn.gold{background:var(--gold);color:#1a1400}
+.icon{width:32px;height:32px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--text);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.92rem;transition:.15s}
+.icon:hover{border-color:var(--gold);background:var(--gold-dim)}
+
+#intro{padding:2.5rem 1.5rem;align-items:center;justify-content:center;text-align:center}
+#intro .label{font-size:.66rem;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:1.4rem}
+#intro h1{font-size:clamp(2.2rem,6vw,3.4rem);line-height:1.05;color:#fff;margin-bottom:.5rem}
+#intro .sub{font-size:1.15rem;color:var(--accent);font-style:italic;font-family:'Cormorant Garamond',serif;margin-bottom:1.6rem}
+#intro .lead{max-width:500px;color:var(--muted);font-size:.94rem;line-height:1.7;margin-bottom:2rem}
+#name{background:var(--panel);border:1px solid var(--line);color:var(--text);padding:.75rem 1.1rem;border-radius:8px;font-size:1rem;width:250px;text-align:center;margin-bottom:1.1rem;font-family:'Inter',sans-serif}
+#name:focus{outline:none;border-color:var(--accent)}
+#intro .hint{margin-top:1.8rem;font-size:.72rem;color:var(--muted)}
+
+.hall-wrap,.corr-wrap{padding:1.6rem;display:flex;flex-direction:column;gap:1rem;flex:1;overflow-y:auto}
+.hall-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:.7rem}
+.hall-card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1.1rem .9rem;cursor:pointer;transition:.18s;text-align:center}
+.hall-card:hover{border-color:var(--gold);background:var(--gold-dim);transform:translateY(-2px)}
+.hall-card .ic{font-size:1.7rem;margin-bottom:.35rem}
+.hall-card .nm{font-size:.86rem;font-weight:500}
+.hall-card .ds{font-size:.72rem;color:var(--muted);margin-top:.25rem}
+.corr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.7rem}
+.door{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:1rem .8rem;cursor:pointer;transition:.18s;position:relative}
+.door:hover{border-color:var(--accent);transform:translateY(-2px)}
+.door.done{border-color:var(--green);background:rgba(74,222,128,.06)}
+.door .num{position:absolute;top:.5rem;right:.7rem;font-size:.72rem;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.door .ic{font-size:1.6rem;margin-bottom:.3rem}
+.door .nm{font-size:.88rem;font-weight:600}
+.door .q{font-size:.74rem;color:var(--muted);margin-top:.3rem;line-height:1.4}
+.door.done .status{color:var(--green);font-size:.7rem;margin-top:.4rem}
+.door:not(.done) .status{color:var(--muted);font-size:.7rem;margin-top:.4rem}
+.final-door{margin-top:.6rem}
+.final-door.locked{opacity:.45;cursor:not-allowed}
+.final-door.locked:hover{border-color:var(--line);transform:none}
+
+.room-wrap{padding:1.2rem 1.4rem 1.4rem;flex:1;display:flex;flex-direction:column;gap:.9rem;overflow-y:auto}
+.room-head{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.2rem}
+.room-head .qn{font-size:.66rem;letter-spacing:.1em;color:var(--gold);text-transform:uppercase;margin-bottom:.3rem}
+.room-head h2{font-size:1.35rem;color:#fff;margin-bottom:.3rem}
+.room-head .qt{font-size:.9rem;color:var(--muted);line-height:1.5}
+.objs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:.6rem}
+.obj{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.9rem .7rem;text-align:center;cursor:pointer;transition:.16s}
+.obj:hover{border-color:var(--accent);background:var(--accent-dim);transform:translateY(-2px)}
+.obj.seen{opacity:.55}
+.obj .ic{font-size:1.5rem;margin-bottom:.25rem}
+.obj .nm{font-size:.8rem;font-weight:500}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:1rem 1.1rem}
+.panel h3{font-size:1rem;color:var(--gold);margin-bottom:.7rem;font-family:'Cormorant Garamond',serif}
+.field{margin-bottom:.55rem}
+.field .lbl{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:.2rem}
+.field .val{font-size:.84rem;line-height:1.5;color:var(--text);min-height:1.2rem}
+.field .val.empty{color:var(--muted);font-style:italic}
+.field .val.ok{color:var(--green)}
+.actions{display:flex;gap:.6rem;margin-top:.9rem;flex-wrap:wrap}
+
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:80;display:none;align-items:center;justify-content:center;padding:1rem}
+.modal-bg.open{display:flex}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:14px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 70px rgba(0,0,0,.5)}
+.modal.wide{max-width:820px}
+.modal-h{padding:1rem 1.3rem;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal-h h3{font-size:1.2rem;color:var(--gold)}
+.modal-b{padding:1.2rem 1.3rem}
+.modal-b p{font-size:.9rem;color:var(--muted);line-height:1.65;margin-bottom:.7rem}
+.modal-f{padding:.9rem 1.3rem;border-top:1px solid var(--line);display:flex;gap:.6rem;justify-content:flex-end;flex-wrap:wrap}
+.frag{background:var(--card);border-left:3px solid var(--gold);border-radius:0 8px 8px 0;padding:.75rem .9rem;margin-bottom:.6rem;font-size:.84rem;line-height:1.55;color:var(--text)}
+
+/* === CHALLENGE COMMON === */
+.ch-head{background:var(--card);border-left:4px solid var(--gold);border-radius:0 10px 10px 0;padding:.9rem 1.1rem;margin-bottom:1rem}
+.ch-head .qn{font-size:.66rem;letter-spacing:.1em;color:var(--gold);text-transform:uppercase;margin-bottom:.3rem}
+.ch-head .qt{font-size:.94rem;line-height:1.5;color:#fff}
+.ch-hint{font-size:.78rem;color:var(--muted);line-height:1.55;margin-bottom:.9rem;font-style:italic}
+.ch-btn-row{display:flex;gap:.6rem;justify-content:flex-end;margin-top:1rem;flex-wrap:wrap}
+
+/* C1: fragments */
+.frag-pool{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem}
+.frag-item{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.6rem .9rem;font-size:.84rem;line-height:1.5;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:.6rem}
+.frag-item:hover{border-color:var(--accent);background:var(--accent-dim)}
+.frag-item.sel{border-color:var(--gold);background:var(--gold-dim)}
+.frag-item .mk{width:1.4rem;text-align:center;color:var(--gold);font-weight:600}
+.frag-item.drag-over{border-color:var(--gold);background:var(--gold-dim)}
+.frag-item[draggable="true"]{cursor:grab}
+.frag-item[draggable="true"]:active{cursor:grabbing}
+.build-area{background:var(--bg);border:1px dashed var(--line);border-radius:10px;padding:.8rem;min-height:80px;margin-bottom:1rem;transition:.15s}
+.build-area.drag-over{border-color:var(--gold);background:var(--gold-dim)}
+.build-area .empty-hint{color:var(--muted);font-size:.82rem;font-style:italic}
+.build-slot{background:var(--card);border-left:3px solid var(--green);border-radius:0 8px 8px 0;padding:.5rem .8rem;font-size:.82rem;margin-bottom:.4rem;display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+.build-slot .x{cursor:pointer;color:var(--muted);padding:0 .3rem}
+.build-slot .x:hover{color:var(--red)}
+
+/* C1 signs */
+.signs-list{display:flex;flex-direction:column;gap:.4rem}
+.sign-item{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.55rem .85rem;font-size:.82rem;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:.6rem}
+.sign-item:hover{border-color:var(--accent)}
+.sign-item.sel{border-color:var(--gold);background:var(--gold-dim)}
+.sign-item .cb{width:1.1rem;height:1.1rem;border:1.5px solid var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#07070f;flex-shrink:0}
+.sign-item.sel .cb{background:var(--gold);border-color:var(--gold)}
+
+/* C2: buckets */
+.buckets{display:grid;grid-template-columns:1fr 1fr 1fr;gap:.6rem;margin-bottom:1rem}
+.bucket{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:.6rem;min-height:120px;transition:.15s}
+.bucket.drag-over{border-color:var(--gold);background:var(--gold-dim)}
+.bucket .bt{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);margin-bottom:.5rem;text-align:center}
+.bucket .bz{min-height:70px;display:flex;flex-direction:column;gap:.3rem}
+.bucket .bi{background:var(--card);border:1px solid var(--line);border-radius:6px;padding:.4rem .6rem;font-size:.72rem;line-height:1.4;cursor:pointer;transition:.15s}
+.bucket .bi:hover{border-color:var(--red);background:rgba(224,90,90,.08)}
+.card-pool{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
+.card-chip{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.5rem .8rem;font-size:.78rem;cursor:pointer;transition:.15s}
+.card-chip:hover{border-color:var(--accent);background:var(--accent-dim)}
+.card-chip.sel{border-color:var(--gold);background:var(--gold-dim)}
+.card-chip.drag-over{border-color:var(--gold);background:var(--gold-dim)}
+.card-chip[draggable="true"]{cursor:grab}
+.card-chip[draggable="true"]:active{cursor:grabbing}
+
+/* C3: scheme */
+.schemes{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem}
+.scheme{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:.7rem}
+.scheme .st{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:var(--gold);margin-bottom:.5rem;text-align:center}
+.scheme .slots{display:flex;flex-direction:column;gap:.35rem}
+.scheme .slot{background:var(--card);border:1px dashed var(--line);border-radius:6px;padding:.4rem .6rem;font-size:.72rem;min-height:2rem;display:flex;flex-direction:column;justify-content:center;transition:.15s}
+.scheme .slot.drag-over{border-color:var(--gold);background:var(--gold-dim)}
+.scheme .slot .sl{font-size:.6rem;color:var(--muted);text-transform:uppercase}
+.scheme .slot .sv{color:var(--text);font-weight:500}
+.scheme .slot.filled{border-style:solid;border-color:var(--green);background:rgba(74,222,128,.06)}
+.scheme .slot .sv.miss{color:var(--muted);font-style:italic;font-weight:400}
+.card-pool-c3{display:flex;flex-wrap:wrap;gap:.4rem;margin-bottom:1rem}
+
+/* C4: contradiction */
+.theory-list{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+.theory-item{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.55rem .85rem;font-size:.82rem;cursor:pointer;transition:.15s;display:flex;gap:.6rem;align-items:flex-start}
+.theory-item:hover{border-color:var(--accent)}
+.theory-item.sel{border-color:var(--red);background:rgba(224,90,90,.1)}
+.theory-item .mk{width:1.4rem;color:var(--gold);font-weight:600;flex-shrink:0}
+.theory-item.drag-over{border-color:var(--gold);background:var(--gold-dim)}
+.crit-checks{display:flex;flex-direction:column;gap:.4rem;margin-bottom:1rem}
+.crit-check{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:.5rem .8rem;font-size:.8rem;cursor:pointer;display:flex;gap:.6rem;align-items:center;transition:.15s}
+.crit-check:hover{border-color:var(--accent)}
+.crit-check.sel{border-color:var(--gold);background:var(--gold-dim)}
+.crit-check .cb{width:1.1rem;height:1.1rem;border:1.5px solid var(--line);border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#07070f;flex-shrink:0}
+.crit-check.sel .cb{background:var(--gold);border-color:var(--gold)}
+
+/* C5: falsify */
+.claims-list{display:flex;flex-direction:column;gap:.7rem;margin-bottom:1rem}
+.claim-box{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.8rem .9rem}
+.claim-box .ct{font-size:.86rem;line-height:1.5;margin-bottom:.5rem}
+.claim-box .row{display:flex;gap:.4rem;margin-bottom:.5rem;flex-wrap:wrap}
+.claim-box .row button{background:var(--bg);border:1px solid var(--line);color:var(--text);padding:.35rem .8rem;border-radius:6px;font-size:.76rem;cursor:pointer;transition:.15s;font-family:'Inter',sans-serif}
+.claim-box .row button:hover{border-color:var(--accent)}
+.claim-box .row button.sel{border-color:var(--gold);background:var(--gold-dim);color:var(--gold)}
+.claim-box textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:6px;color:var(--text);padding:.5rem .7rem;font-family:'JetBrains Mono',monospace;font-size:.76rem;line-height:1.5;min-height:48px;resize:vertical}
+.claim-box textarea:focus{outline:none;border-color:var(--accent)}
+.claim-box .mini-cnt{font-size:.66rem;color:var(--muted);text-align:right;margin-top:.2rem}
+
+/* C6: rating */
+.theories-compare{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin-bottom:1rem}
+.th-card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:.8rem}
+.th-card .tt{font-size:.9rem;font-weight:600;color:var(--gold);margin-bottom:.4rem}
+.th-card .td{font-size:.76rem;color:var(--muted);line-height:1.5;margin-bottom:.6rem}
+.rate-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.35rem;font-size:.76rem}
+.rate-row .rl{flex:1;color:var(--text)}
+.rate-row .stars{display:flex;gap:.15rem}
+.rate-row .stars span{font-size:1rem;cursor:pointer;color:var(--line);transition:.1s}
+.rate-row .stars span.on{color:var(--gold)}
+#thConclusion{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:.6rem .8rem;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.5;min-height:80px;resize:vertical;margin-top:.5rem}
+#thConclusion:focus{outline:none;border-color:var(--accent)}
+
+/* C7: pairs */
+.pairs-list{display:flex;flex-direction:column;gap:.5rem;margin-bottom:1rem}
+.pair-row{display:grid;grid-template-columns:1fr auto 1fr;gap:.5rem;align-items:center}
+.pair-row select{background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:.55rem .7rem;font-family:'Inter',sans-serif;font-size:.78rem;width:100%}
+.pair-row select:focus{outline:none;border-color:var(--accent)}
+.pair-row .arr{color:var(--muted);font-size:1.1rem;text-align:center}
+#pairsConcl{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:8px;color:var(--text);padding:.6rem .8rem;font-family:'JetBrains Mono',monospace;font-size:.78rem;line-height:1.5;min-height:80px;resize:vertical;margin-top:.5rem}
+#pairsConcl:focus{outline:none;border-color:var(--accent)}
+
+/* FINAL */
+.final-wrap{padding:1.4rem;flex:1;display:flex;flex-direction:column;gap:.9rem;overflow-y:auto}
+.final-q{background:var(--card);border-left:4px solid var(--gold);border-radius:0 10px 10px 0;padding:1rem 1.2rem}
+.final-q .qn{font-size:.68rem;letter-spacing:.1em;color:var(--gold);text-transform:uppercase;margin-bottom:.3rem}
+.final-q .qt{font-size:1.15rem;line-height:1.5;color:#fff;font-family:'Cormorant Garamond',serif;font-weight:600}
+#finalText{width:100%;min-height:220px;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--text);padding:1rem;font-family:'JetBrains Mono',monospace;font-size:.86rem;line-height:1.6;resize:vertical}
+#finalText:focus{outline:none;border-color:var(--accent)}
+.final-note{font-size:.78rem;color:var(--muted);line-height:1.55;font-style:italic}
+.cnt{font-size:.7rem;color:var(--muted);margin-top:.35rem;text-align:right}
+.cnt.warn{color:var(--gold)}
+
+.result-wrap{padding:1.6rem;flex:1;display:flex;flex-direction:column;gap:1rem;overflow-y:auto}
+.cert{background:linear-gradient(150deg,#141c30,#0a0f1c);border:2px solid var(--gold);border-radius:14px;padding:1.8rem 1.5rem;text-align:center}
+.cert .seal{font-size:2.4rem;margin-bottom:.3rem}
+.cert h2{font-size:1rem;color:var(--gold);letter-spacing:.12em;margin-bottom:.3rem}
+.cert .who{font-size:1.5rem;font-weight:700;margin:.8rem 0 .5rem;color:#fff}
+.cert .lv{display:inline-block;background:var(--gold);color:#1a1400;padding:.32rem 1.2rem;border-radius:20px;font-weight:700;font-size:.86rem}
+.cert .meta{margin-top:1.1rem;font-size:.84rem;color:var(--muted);line-height:1.7}
+.check-list{list-style:none;font-size:.84rem;line-height:1.9}
+.check-list li{display:flex;gap:.5rem;align-items:flex-start}
+.check-list .ok{color:var(--green)}
+.check-list .no{color:var(--muted)}
+
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(380px,100vw);background:var(--panel);border-left:1px solid var(--line);z-index:70;transform:translateX(100%);transition:.25s ease;display:flex;flex-direction:column}
+.drawer.open{transform:none}
+.drawer-h{padding:1rem 1.2rem;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;font-family:'Cormorant Garamond',serif;font-size:1.15rem}
+.drawer-b{flex:1;overflow-y:auto;padding:1rem 1.2rem}
+.sect{margin-bottom:1rem}
+.sect .st{font-size:.72rem;letter-spacing:.08em;color:var(--gold);text-transform:uppercase;margin-bottom:.4rem}
+.sect .frag{background:var(--card);border-radius:8px;padding:.6rem .8rem;font-size:.8rem;line-height:1.5;margin-bottom:.4rem;border-left:2px solid var(--accent)}
+.sect .frag.ok{border-left-color:var(--green)}
+.sect .miss{font-size:.78rem;color:var(--muted);font-style:italic;padding:.4rem .8rem}
+
+.toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(90px);background:var(--card);border:1px solid var(--green);padding:.8rem 1.2rem;border-radius:10px;z-index:100;display:flex;align-items:center;gap:.6rem;box-shadow:0 12px 35px rgba(0,0,0,.5);opacity:0;transition:.3s;max-width:92vw}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.err{border-color:var(--red)}
+.toast .tt{font-weight:600;font-size:.88rem}
+.toast .td{font-size:.74rem;color:var(--muted)}
+
+::-webkit-scrollbar{width:8px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+::-webkit-scrollbar-thumb:hover{background:var(--accent)}
+
+@media(max-width:700px){
+  .buckets{grid-template-columns:1fr}
+  .schemes{grid-template-columns:1fr}
+  .theories-compare{grid-template-columns:1fr}
+  .pair-row{grid-template-columns:1fr}
+  .pair-row .arr{display:none}
+  .hall-grid,.corr-grid,.objs{grid-template-columns:1fr 1fr}
+  .bar .meta{display:none}
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+
+  <!-- INTRO -->
+  <div id="intro" class="screen on">
+    <div class="label">Институт методологии науки · Архив 07</div>
+    <h1>Критерии<br>истины</h1>
+    <div class="sub">Семь вопросов. Одна незаконченная методичка.</div>
+    <p class="lead">
+      Профессор Элиас Вейн уехал на конференцию и оставил вам задачу:
+      завершить его методичку «Идеалы и критерии научности».
+      В папке — только оглавление из семи пунктов.
+      Всё остальное — в кабинетах, лаборатории, библиотеке и архиве.
+      Соберите материал и напишите итог своими словами.
+    </p>
+    <input type="text" id="name" placeholder="Ваше имя" maxlength="22" autocomplete="off">
+    <br>
+    <button class="btn" id="start" disabled>Войти в институт →</button>
+    <p class="hint">Прогресс сохраняется · Ответы пишутся своими словами</p>
+  </div>
+
+  <!-- HALL -->
+  <div id="hall" class="screen">
+    <div class="bar">
+      <div class="title">Холл института</div>
+      <div class="meta"><span>Разделов: <b id="hallAns">0</b>/7</span></div>
+      <button class="icon" id="bMethodH" title="Методичка">📘</button>
+    </div>
+    <div class="hall-wrap">
+      <div class="hall-grid" id="hallGrid"></div>
+      <div style="display:flex;justify-content:center;margin-top:.4rem">
+        <button class="btn gold" id="toCorr" disabled>Выйти в коридор →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CORRIDOR -->
+  <div id="corridor" class="screen">
+    <div class="bar">
+      <div class="title">Коридор института</div>
+      <div class="meta"><span>Пройдено: <b id="corrDone">0</b>/7</span></div>
+      <button class="icon" id="bMethodC" title="Методичка">📘</button>
+    </div>
+    <div class="corr-wrap">
+      <div class="corr-grid" id="corrGrid"></div>
+      <div class="final-door" id="finalDoor"></div>
+      <div style="display:flex;justify-content:flex-start;margin-top:.4rem">
+        <button class="btn ghost" id="backHall">← Вернуться в холл</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ROOM -->
+  <div id="room" class="screen">
+    <div class="bar">
+      <div class="title" id="roomTitle">Комната</div>
+      <div class="meta"><span id="roomMeta"></span></div>
+      <button class="icon" id="bMethodR" title="Методичка">📘</button>
+    </div>
+    <div class="room-wrap">
+      <div class="room-head">
+        <div class="qn" id="roomQN"></div>
+        <h2 id="roomH2"></h2>
+        <div class="qt" id="roomQT"></div>
+      </div>
+      <div class="objs" id="roomObjs"></div>
+      <div class="panel">
+        <h3>Собранный материал</h3>
+        <div class="field"><div class="lbl">Определение</div><div class="val empty" id="fDef">— не собрано —</div></div>
+        <div class="field"><div class="lbl">Критерии / элементы</div><div class="val empty" id="fCrit">— не собрано —</div></div>
+        <div class="field"><div class="lbl">Вывод / пример</div><div class="val empty" id="fConcl">— не собрано —</div></div>
+        <div class="actions">
+          <button class="btn" id="checkRoom">Перейти к испытанию →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FINAL -->
+  <div id="final" class="screen">
+    <div class="bar">
+      <div class="title">Методический кабинет</div>
+      <div class="meta"><span>Разделов: <b>7</b>/7</span></div>
+      <button class="icon" id="bMethodF" title="Методичка">📘</button>
+    </div>
+    <div class="final-wrap">
+      <div class="final-q">
+        <div class="qn">Контрольный вопрос</div>
+        <div class="qt">Что такое научное знание и чем оно отличается от мнения?</div>
+      </div>
+      <p class="final-note">
+        Профессор Вейн: «Семь разделов — это материал. Теперь главное: сформулируйте итог своими словами. Не пересказывайте — синтезируйте. Если вы поняли, вы сможете».
+      </p>
+      <textarea id="finalText" placeholder="Ваш итоговый текст..." maxlength="3000"></textarea>
+      <div class="cnt" id="finalCnt">0 / 3000 (мин. 600)</div>
+      <div class="actions">
+        <button class="btn gold" id="submitFinal" disabled>Проверить и отправить</button>
+        <button class="btn ghost" id="openMethodFinal">Открыть методичку</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT -->
+  <div id="result" class="screen">
+    <div class="bar">
+      <div class="title">Итоговый документ</div>
+      <button class="icon" id="bMethodRes" title="Методичка">📘</button>
+    </div>
+    <div class="result-wrap">
+      <div class="cert" id="cert"></div>
+      <div class="panel">
+        <h3>Проверка смысловых блоков</h3>
+        <ul class="check-list" id="checkList"></ul>
+      </div>
+      <div class="actions" style="justify-content:center">
+        <button class="btn gold" id="dl">Скачать методичку</button>
+        <button class="btn ghost" onclick="location.reload()">Новая игра</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="drawer" id="methodD">
+  <div class="drawer-h"><span>Методичка</span><button class="icon" onclick="closeD()">✕</button></div>
+  <div class="drawer-b" id="methodL"></div>
+</div>
+
+<div class="modal-bg" id="modalM">
+  <div class="modal" id="modalBox">
+    <div class="modal-h"><h3 id="mTitle">—</h3><button class="icon" onclick="closeM()">✕</button></div>
+    <div class="modal-b" id="mBody"></div>
+    <div class="modal-f" id="mFoot"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast">
+  <span style="font-size:1.2rem">✦</span>
+  <div><div class="tt" id="tt"></div><div class="td" id="td"></div></div>
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   ДАННЫЕ КОМНАТ
+   ============================================================ */
+
+const QUESTIONS = [
+  {
+    id:1, room:'Кабинет источников', icon:'📚', q:'Что такое научное знание и каковы его признаки?',
+    challenge:'fragments',
+    objs:[
+      {ic:'📄',nm:'Рабочий стол',txt:'Черновик: «Научное знание — особый результат познавательной деятельности, получаемый с помощью специальных методов».',frag:'def'},
+      {ic:'📚',nm:'Полка монографий',txt:'Пометки: объективность, рациональность, системность.',frag:'crit'},
+      {ic:'💻',nm:'Компьютер',txt:'Файл «Признаки.docx»: проверяемость, прогностичность, фиксация.',frag:'crit'},
+      {ic:'🖼️',nm:'Доска',txt:'Пример: измерение температуры кипения воды при заданном давлении.',frag:'example'},
+      {ic:'✉️',nm:'Записка',txt:'Отличие от мнения: аргументированность, фиксация, доступность проверки.',frag:'concl'}
+    ],
+    ch:{
+      fragments:[
+        {t:'особый результат познавательной деятельности',ok:true},
+        {t:'получаемый с помощью специальных методов',ok:true},
+        {t:'направленный на познание истины',ok:true},
+        {t:'объяснение явлений и предвидение их развития',ok:true},
+        {t:'который нельзя проверить',ok:false},
+        {t:'основанный на личном впечатлении',ok:false},
+        {t:'доступный только автору',ok:false},
+        {t:'не требующий фиксации',ok:false}
+      ],
+      signs:[
+        {t:'объективность',ok:true},
+        {t:'рациональность',ok:true},
+        {t:'системность',ok:true},
+        {t:'проверяемость',ok:true},
+        {t:'прогностичность',ok:true},
+        {t:'авторитетность',ok:false},
+        {t:'неопровержимость',ok:false},
+        {t:'личная убеждённость',ok:false}
+      ]
+    }
+  },
+  {
+    id:2, room:'Методологический класс', icon:'🎓', q:'Как определяется идеал научного исследования?',
+    challenge:'buckets',
+    objs:[
+      {ic:'📄',nm:'Стол',txt:'Конспект: идеал — система познавательных ценностей, норм и требований.',frag:'def'},
+      {ic:'🖼️',nm:'Схема на стене',txt:'Положения: истина, постановка проблемы, рациональное обоснование, проверяемость.',frag:'crit'},
+      {ic:'🗄️',nm:'Шкаф с папками',txt:'Системная организация; ясность методов.',frag:'crit'},
+      {ic:'💻',nm:'Компьютер',txt:'ДНК: вывод опирается на экспериментальные данные и проверки.',frag:'example'},
+      {ic:'📓',nm:'Тетрадь',txt:'Исторические эталоны: математическое, физическое, гуманитарное знание.',frag:'concl'}
+    ],
+    ch:{
+      buckets:['Нормы идеала','Исторические эталоны','Ложные утверждения'],
+      cards:[
+        {t:'Истина — высшая ценность',b:0},
+        {t:'Постановка проблемы и цели',b:0},
+        {t:'Проверяемость другим исследователем',b:0},
+        {t:'Ясность методов',b:0},
+        {t:'Системная организация',b:0},
+        {t:'Рациональное обоснование',b:0},
+        {t:'Математическое знание',b:1},
+        {t:'Физическое знание',b:1},
+        {t:'Гуманитарное знание',b:1},
+        {t:'Личный вкус исследователя',b:2},
+        {t:'Обязательная публикация в журнале',b:2},
+        {t:'Стремление подтвердить свою гипотезу',b:2}
+      ]
+    }
+  },
+  {
+    id:3, room:'Аудитория рациональности', icon:'🧭', q:'Охарактеризуйте основные типы идеалов рациональности.',
+    challenge:'schemes',
+    objs:[
+      {ic:'🖼️',nm:'Доска',txt:'Три колонки: классический (объект), неклассический (объект + средства), постнеклассический (объект + средства + ценности).',frag:'def'},
+      {ic:'📜',nm:'Плакат',txt:'Преемственность: новый тип не уничтожает предыдущий.',frag:'concl'},
+      {ic:'📄',nm:'Стол с конспектом',txt:'Другая классификация: дедуктивная, инструментальная, коммуникативная, эволюционная.',frag:'crit'},
+      {ic:'✉️',nm:'Записка',txt:'Не смешивать основания деления.',frag:'concl'},
+      {ic:'🖼️',nm:'Примеры на стенах',txt:'Классическая механика; микрофизика; экосистема.',frag:'example'}
+    ],
+    ch:{
+      schemes:[
+        {name:'Историческая триада', slots:[
+          {label:'Тип 1',ans:'Классический'},
+          {label:'Пояснение 1',ans:'Объект'},
+          {label:'Тип 2',ans:'Неклассический'},
+          {label:'Пояснение 2',ans:'Объект + средства'},
+          {label:'Тип 3',ans:'Постнеклассический'},
+          {label:'Пояснение 3',ans:'Объект + средства + ценности'}
+        ]},
+        {name:'Альтернативная классификация', slots:[
+          {label:'Тип 1',ans:'Дедуктивная'},
+          {label:'Тип 2',ans:'Инструментальная'},
+          {label:'Тип 3',ans:'Коммуникативная'},
+          {label:'Тип 4',ans:'Эволюционная'}
+        ]}
+      ],
+      cards:['Классический','Неклассический','Постнеклассический','Объект','Объект + средства','Объект + средства + ценности','Дедуктивная','Инструментальная','Коммуникативная','Эволюционная','Классическая механика'],
+      exampleCard:'Классическая механика',
+      extraQuestion:'Как соотносятся две классификации?',
+      extraOpts:[
+        {t:'Это одна и та же классификация, просто разными словами',ok:false},
+        {t:'Две классификации имеют разные основания деления; их нельзя смешивать',ok:true},
+        {t:'Постнеклассическая отменяет предыдущие',ok:false}
+      ]
+    }
+  },
+  {
+    id:4, room:'Логическая лаборатория', icon:'🧪', q:'Что представляют собой логические критерии научности знания?',
+    challenge:'contradiction',
+    objs:[
+      {ic:'📄',nm:'Стол',txt:'Логические критерии — требования к внутреннему устройству знания.',frag:'def'},
+      {ic:'🖼️',nm:'Стенд 1',txt:'Непротиворечивость.',frag:'crit'},
+      {ic:'🖼️',nm:'Стенд 2',txt:'Полнота.',frag:'crit'},
+      {ic:'🖼️',nm:'Стенд 3',txt:'Независимость.',frag:'crit'},
+      {ic:'📁',nm:'Папка',txt:'Определённость понятий; обоснованность выводов.',frag:'crit'},
+      {ic:'✉️',nm:'Пример на доске',txt:'Одновременное утверждение свойства и его отсутствия — противоречие.',frag:'example'}
+    ],
+    ch:{
+      theory:[
+        'Все металлы при нагревании расширяются.',
+        'Железо — металл.',
+        'Железо при нагревании расширяется.',
+        'Некоторые металлы при нагревании не расширяются.',
+        'Железо при нагревании не расширяется.'
+      ],
+      pairs:[[0,3],[2,4]],
+      crits:[
+        {t:'непротиворечивость',missing:true},
+        {t:'полнота',missing:false},
+        {t:'независимость',missing:false},
+        {t:'определённость понятий',missing:true},
+        {t:'обоснованность выводов',missing:false}
+      ]
+    }
+  },
+  {
+    id:5, room:'Кабинет Поппера', icon:'📕', q:'Почему доказательством научности является его опровержимость?',
+    challenge:'falsify',
+    objs:[
+      {ic:'📕',nm:'Книга Поппера',txt:'Закладка: «Теория научна, если её можно опровергнуть».',frag:'crit'},
+      {ic:'📄',nm:'Стол',txt:'Фальсифицируемость: можно указать, какие наблюдения заставят отказаться от теории.',frag:'def'},
+      {ic:'🔐',nm:'Сейф',txt:'Перо чёрного лебедя: одного контрпримера достаточно.',frag:'example'},
+      {ic:'🖼️',nm:'Доска',txt:'Почему важно: проверяемость, критичность, развитие науки, отличие от неопровержимых.',frag:'crit'},
+      {ic:'📓',nm:'Тетрадь',txt:'По Попперу, теории не доказываются окончательно, но опровергаются.',frag:'concl'}
+    ],
+    ch:{
+      claims:[
+        {t:'Все лебеди белые.',falsifiable:true,placeholder:'Например: чёрный лебедь...'},
+        {t:'Завтра пойдёт дождь или не пойдёт.',falsifiable:false,placeholder:'Почему это нельзя проверить?'},
+        {t:'Все металлы при нагревании расширяются.',falsifiable:true,placeholder:'Например: металл, который...'},
+        {t:'Существует невидимый единорог, который не оставляет следов.',falsifiable:false,placeholder:'Почему это нельзя проверить?'}
+      ]
+    }
+  },
+  {
+    id:6, room:'Эстетический семинар', icon:'🎨', q:'Можно ли научную теорию назвать красивой?',
+    challenge:'rating',
+    objs:[
+      {ic:'📄',nm:'Стол',txt:'Красота — интеллектуальная гармония устройства.',frag:'def'},
+      {ic:'🖼️',nm:'Стенд 1',txt:'Простота; симметрия.',frag:'crit'},
+      {ic:'🖼️',nm:'Стенд 2',txt:'Ясность и элегантность; объяснительная сила.',frag:'crit'},
+      {ic:'📜',nm:'Плакат',txt:'Примеры: Максвелл; теория относительности.',frag:'example'},
+      {ic:'✉️',nm:'Записка',txt:'Красота не доказывает истинность.',frag:'concl'}
+    ],
+    ch:{
+      criteria:['простота','симметрия','ясность','объяснительная сила'],
+      theories:[
+        {t:'Теория А. Геоцентрическая',d:'Много эпициклов, сложная, объясняет видимое движение.'},
+        {t:'Теория Б. Гелиоцентрическая',d:'Проще, симметричнее, объясняет больше явлений.'}
+      ],
+      keyword:'не доказывает'
+    }
+  },
+  {
+    id:7, room:'Практикум', icon:'⚙️', q:'Почему практика является критерием научности?',
+    challenge:'pairs',
+    objs:[
+      {ic:'📄',nm:'Стол',txt:'Практика проверяет соответствие теории реальности.',frag:'def'},
+      {ic:'🖼️',nm:'Стенд 1',txt:'Соответствие действительности; применимость.',frag:'crit'},
+      {ic:'🖼️',nm:'Стенд 2',txt:'Границы теории; стимул развития.',frag:'crit'},
+      {ic:'📜',nm:'Плакат',txt:'Примеры: электромагнетизм → радио; LIGO 2015.',frag:'example'},
+      {ic:'🖼️',nm:'Доска',txt:'Формула: знать, чтобы предвидеть, предвидеть, чтобы действовать.',frag:'concl'},
+      {ic:'✉️',nm:'Записка',txt:'Полезность не делает идею научной.',frag:'concl'}
+    ],
+    ch:{
+      theories:[
+        {t:'Электромагнетизм Максвелла',ok:'Радиосвязь и электротехника'},
+        {t:'Общая теория относительности',ok:'LIGO, гравитационные волны 2015'},
+        {t:'Квантовая механика',ok:'Полупроводники и транзисторы'},
+        {t:'Теория теплорода',ok:'Паровая машина'}
+      ],
+      options:['Радиосвязь и электротехника','LIGO, гравитационные волны 2015','Полупроводники и транзисторы','Паровая машина'],
+      keyword:'не гарантирует'
+    }
+  }
+];
+
+/* ============================================================
+   УТИЛИТЫ
+   ============================================================ */
+
+function shuffle(arr){
+  const a=arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+let S = {
+  name:'', screen:'intro',
+  collected:{}, answers:{}, finalText:'', finalScore:0
+};
+
+function $(id){return document.getElementById(id)}
+function show(screen){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('on'));
+  const el=$(screen); if(el) el.classList.add('on');
+  S.screen=screen;
+}
+function toast(t,d,err){
+  $('tt').textContent=t; $('td').textContent=d;
+  const el=$('toast'); el.classList.toggle('err',!!err);
+  el.classList.add('show');
+  clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),3200);
+}
+function closeM(){ $('modalM').classList.remove('open'); }
+function openM(title, bodyHTML, footBtns, wide){
+  $('mTitle').textContent=title;
+  $('mBody').innerHTML=bodyHTML;
+  $('modalBox').classList.toggle('wide',!!wide);
+  const f=$('mFoot'); f.innerHTML='';
+  (footBtns||[{l:'Закрыть',fn:closeM}]).forEach(b=>{
+    const btn=document.createElement('button');
+    btn.className='btn '+(b.cls||'');
+    btn.textContent=b.l; btn.onclick=b.fn;
+    f.appendChild(btn);
+  });
+  $('modalM').classList.add('open');
+}
+function closeD(){ $('methodD').classList.remove('open'); }
+
+/* ============================================================
+   DnD-хелперы
+   ============================================================ */
+
+let dragPayload = null; // { type: 'frag'|'card', payload: any }
+
+function setDrag(el, payload){
+  el.setAttribute('draggable','true');
+  el.addEventListener('dragstart', e=>{
+    dragPayload = payload;
+    e.dataTransfer.effectAllowed='move';
+    e.dataTransfer.setData('text/plain','');
+  });
+  el.addEventListener('dragend', ()=>{ dragPayload = null; });
+}
+
+function allowDrop(el, onDrop){
+  el.addEventListener('dragover', e=>{
+    e.preventDefault();
+    e.dataTransfer.dropEffect='move';
+    el.classList.add('drag-over');
+  });
+  el.addEventListener('dragleave', ()=>el.classList.remove('drag-over'));
+  el.addEventListener('drop', e=>{
+    e.preventDefault();
+    el.classList.remove('drag-over');
+    if(dragPayload){ onDrop(dragPayload); dragPayload = null; }
+  });
+}
+
+/* ============================================================
+   ИНТРО
+   ============================================================ */
+
+$('name').addEventListener('input',e=>{
+  $('start').disabled = e.target.value.trim().length < 2;
+});
+$('start').addEventListener('click',()=>{
+  S.name = $('name').value.trim();
+  show('hall'); renderHall();
+  toast('Расследование начато', S.name + ', изучите холл');
+});
+
+/* ============================================================
+   ХОЛЛ
+   ============================================================ */
+
+const HALL_ITEMS = [
+  {id:'portrait', ic:'🖼️', nm:'Портрет основателя', ds:'Цитата на табличке'},
+  {id:'desk', ic:'🗂️', nm:'Стойка администратора', ds:'Карта, методичка, блокнот'},
+  {id:'board', ic:'📌', nm:'Доска объявлений', ds:'Как играть'},
+  {id:'tasks', ic:'📋', nm:'Стенд с задачами', ds:'Семь вопросов'}
+];
+function renderHall(){
+  const g=$('hallGrid'); g.innerHTML='';
+  HALL_ITEMS.forEach(it=>{
+    const c=document.createElement('div');
+    c.className='hall-card';
+    c.innerHTML=`<div class="ic">${it.ic}</div><div class="nm">${it.nm}</div><div class="ds">${it.ds}</div>`;
+    c.onclick=()=>hallAction(it.id);
+    g.appendChild(c);
+  });
+  $('hallAns').textContent = Object.keys(S.answers).length;
+  $('toCorr').disabled = !S.collected._map;
+}
+function hallAction(id){
+  if(id==='portrait'){
+    openM('Портрет основателя',
+      `<p>На табличке под портретом выгравировано:</p>
+       <div class="frag">«Истина не даётся — она завоёвывается проверкой.»<br><em style="color:var(--muted);font-size:.78rem">Проф. А. Н. Разумов, 1962</em></div>`);
+  } else if(id==='desk'){
+    openM('Стойка администратора',
+      `<p>За стойкой — пожилая женщина в очках:</p>
+       <div class="frag">«Вы, должно быть, стажёр? Профессор Вейн предупредил. Вот ваша карта, методичка и блокнот. Он просил передать: „Пусть сам соберёт. Всё в комнатах“».</div>`,
+      [{l:'Взять и выйти в коридор', fn:()=>{S.collected._map=true; closeM(); renderHall(); toast('Получено','Карта, методичка, блокнот');}}]);
+  } else if(id==='board'){
+    openM('Доска объявлений — как играть',
+      `<p><b>1.</b> В коридоре — семь комнат. В каждой — один вопрос и одно испытание.</p>
+       <p><b>2.</b> Осматривайте объекты: каждый даёт материал для ответа.</p>
+       <p><b>3.</b> Затем — испытание. Правильный ответ <b>не показан</b>: его нужно собрать, разложить, найти противоречие, опровергнуть или сопоставить.</p>
+       <p><b>4.</b> Выйти из комнаты можно только после успешного испытания.</p>
+       <p><b>5.</b> Когда все семь пройдены — откроется Методический кабинет. Там вы напишете итог своими словами.</p>`);
+  } else if(id==='tasks'){
+    let html='<p>На стенде — семь карточек:</p>';
+    QUESTIONS.forEach(q=>{ html+=`<div class="frag"><b>${q.id}. ${q.room}</b><br>${q.q}</div>`; });
+    openM('Стенд с задачами', html);
+  }
+}
+$('toCorr').addEventListener('click',()=>{show('corridor'); renderCorridor();});
+
+/* ============================================================
+   КОРИДОР
+   ============================================================ */
+
+function renderCorridor(){
+  const g=$('corrGrid'); g.innerHTML='';
+  QUESTIONS.forEach(q=>{
+    const done=!!S.answers[q.id];
+    const d=document.createElement('div');
+    d.className='door'+(done?' done':'');
+    d.innerHTML=`<div class="num">${q.id}</div><div class="ic">${q.icon}</div>
+      <div class="nm">${q.room}</div><div class="q">${q.q}</div>
+      <div class="status">${done?'✓ пройдена':'○ не пройдена'}</div>`;
+    d.onclick=()=>openRoom(q.id);
+    g.appendChild(d);
+  });
+  const dc=Object.keys(S.answers).length;
+  $('corrDone').textContent=dc;
+  const fd=$('finalDoor');
+  if(dc>=7){
+    fd.className='final-door';
+    fd.innerHTML=`<div class="door done" style="cursor:pointer">
+      <div class="num">✦</div><div class="ic">✦</div>
+      <div class="nm">Методический кабинет</div>
+      <div class="q">Контрольный вопрос и итоговая методичка</div>
+      <div class="status">✓ открыт</div></div>`;
+    fd.querySelector('.door').onclick=()=>{show('final'); $('finalText').focus();};
+  } else {
+    fd.className='final-door locked';
+    fd.innerHTML=`<div class="door">
+      <div class="num">🔒</div><div class="ic">✦</div>
+      <div class="nm">Методический кабинет</div>
+      <div class="q">Сначала завершите все семь комнат</div>
+      <div class="status">Пройдено: ${dc}/7</div></div>`;
+  }
+}
+$('backHall').addEventListener('click',()=>{show('hall'); renderHall();});
+
+/* ============================================================
+   КОМНАТА
+   ============================================================ */
+
+let currentQ=null;
+function openRoom(qid){
+  currentQ = QUESTIONS.find(q=>q.id===qid);
+  if(!S.collected[qid]) S.collected[qid]={def:false,crit:[],concl:false,example:false};
+  show('room'); renderRoom();
+}
+function renderRoom(){
+  const q=currentQ;
+  $('roomTitle').textContent=q.room;
+  $('roomMeta').innerHTML=`Вопрос ${q.id}/7`;
+  $('roomQN').textContent=`Вопрос ${q.id} · ${q.room}`;
+  $('roomH2').textContent=q.q;
+  $('roomQT').textContent='Осмотрите объекты, соберите материал. Затем — испытание.';
+  const col=S.collected[q.id];
+  const objs=$('roomObjs'); objs.innerHTML='';
+  q.objs.forEach((o,i)=>{
+    const seen=(o.frag==='def'&&col.def)||(o.frag==='concl'&&col.concl)||(o.frag==='example'&&col.example)||(o.frag==='crit'&&col.crit.includes(i));
+    const el=document.createElement('div');
+    el.className='obj'+(seen?' seen':'');
+    el.innerHTML=`<div class="ic">${o.ic}</div><div class="nm">${o.nm}</div>`;
+    el.onclick=()=>openObj(o,i);
+    objs.appendChild(el);
+  });
+  updatePanel();
+}
+function openObj(o,idx){
+  const q=currentQ;
+  openM(o.nm,`<p>${o.txt}</p>`,[
+    {l:'Взять материал',fn:()=>{
+      const col=S.collected[q.id];
+      if(o.frag==='def')col.def=true;
+      else if(o.frag==='concl')col.concl=true;
+      else if(o.frag==='example')col.example=true;
+      else if(o.frag==='crit'&&!col.crit.includes(idx))col.crit.push(idx);
+      closeM(); renderRoom(); toast('Материал добавлен',o.nm);
+    }},
+    {l:'Закрыть',cls:'ghost',fn:closeM}
+  ]);
+}
+function updatePanel(){
+  const q=currentQ,col=S.collected[q.id];
+  const fDef=$('fDef'),fCrit=$('fCrit'),fConcl=$('fConcl');
+  if(col.def){fDef.textContent='собрано';fDef.className='val ok';}
+  else{fDef.textContent='— не собрано —';fDef.className='val empty';}
+  if(col.crit.length){fCrit.textContent='собрано ('+col.crit.length+')';fCrit.className='val ok';}
+  else{fCrit.textContent='— не собрано —';fCrit.className='val empty';}
+  if(col.concl||col.example){fConcl.textContent='собрано';fConcl.className='val ok';}
+  else{fConcl.textContent='— не собрано —';fConcl.className='val empty';}
+  $('checkRoom').disabled = !(col.def && col.crit.length>=1 && (col.concl||col.example));
+}
+$('checkRoom').addEventListener('click',()=>{
+  const q=currentQ,col=S.collected[q.id];
+  if(!(col.def && col.crit.length>=1 && (col.concl||col.example))){
+    toast('Недостаточно материала','Осмотрите больше объектов',true); return;
+  }
+  openChallenge(q);
+});
+
+/* ============================================================
+   ИСПЫТАНИЯ — ДИСПЕТЧЕР
+   ============================================================ */
+
+function openChallenge(q){
+  switch(q.challenge){
+    case 'fragments': return chFragments(q);
+    case 'buckets': return chBuckets(q);
+    case 'schemes': return chSchemes(q);
+    case 'contradiction': return chContradiction(q);
+    case 'falsify': return chFalsify(q);
+    case 'rating': return chRating(q);
+    case 'pairs': return chPairs(q);
+  }
+}
+
+function successClose(q){
+  S.answers[q.id]={ok:true};
+  closeM();
+  openM('Испытание пройдено!',
+    `<p>Вы справились. Раздел методички заполнен.</p>
+     <div class="frag"><b>${q.room}</b><br>${q.q}</div>`,
+    [{l:'Выйти в коридор',fn:()=>{closeM();show('corridor');renderCorridor();}}]);
+  toast('Раздел заполнен',q.room);
+}
+function failClose(hint){
+  openM('Не совсем',
+    `<p>${hint}</p><p style="font-size:.82rem;color:var(--muted)">Вернитесь к объектам и перечитайте материал. Потом попробуйте снова.</p>`,
+    [{l:'Понятно',fn:()=>{closeM();renderRoom();}}]);
+}
+
+/* ============================================================
+   C1: FRAGMENTS — собрать определение + выбрать признаки
+   ============================================================ */
+
+function chFragments(q){
+  const d=q.ch;
+  // перемешанный пул обрывков
+  const fragOrder = shuffle(d.fragments.map((f,i)=>({...f, _i:i})));
+  const signOrder = shuffle(d.signs.map((s,i)=>({...s, _i:i})));
+  const expectedTexts = d.fragments.filter(f=>f.ok).map(f=>f.t); // 4 правильных в исходном порядке
+
+  let selected=[]; // индексы в fragOrder
+  let signsSel=[]; // индексы в signOrder
+
+  function render(){
+    let html=`<div class="ch-head"><div class="qn">Испытание · сборка определения</div>
+      <div class="qt">Соберите связное определение научного знания из обрывков. Выберите только верные и расставьте их в правильном порядке.</div></div>
+      <p class="ch-hint">Перетащите обрывок в зону сборки (или кликните). Порядок важен.</p>
+      <div class="build-area" id="buildArea"></div>
+      <p class="ch-hint" style="margin-top:.6rem">Доступные обрывки:</p>
+      <div class="frag-pool" id="fragPool"></div>
+      <p class="ch-hint" style="margin-top:.9rem">Отметьте верные признаки научного знания (минимум 4):</p>
+      <div class="signs-list" id="signsList"></div>`;
+    $('mBody').innerHTML=html;
+    renderBuild(); renderPool(); renderSigns();
+
+    const buildArea=$('buildArea');
+    allowDrop(buildArea, payload=>{
+      if(payload.type==='frag'){
+        if(!selected.includes(payload.idx)){ selected.push(payload.idx); renderBuild(); renderPool(); }
+      }
+    });
+  }
+  function renderBuild(){
+    const b=$('buildArea');
+    if(!selected.length){ b.innerHTML='<div class="empty-hint">— определение пока пустое —</div>'; return; }
+    b.innerHTML='';
+    selected.forEach((idx,pos)=>{
+      const el=document.createElement('div');
+      el.className='build-slot';
+      el.innerHTML=`<span><b>${pos+1}.</b> ${fragOrder[idx].t}</span><span class="x" data-pos="${pos}">✕</span>`;
+      el.querySelector('.x').onclick=()=>{selected.splice(pos,1); renderBuild(); renderPool();};
+      b.appendChild(el);
+    });
+  }
+  function renderPool(){
+    const p=$('fragPool'); p.innerHTML='';
+    fragOrder.forEach((f,i)=>{
+      if(selected.includes(i)) return;
+      const el=document.createElement('div');
+      el.className='frag-item';
+      el.innerHTML=`<span class="mk">⠿</span><span>${f.t}</span>`;
+      setDrag(el,{type:'frag',idx:i});
+      el.onclick=()=>{selected.push(i); renderBuild(); renderPool();};
+      p.appendChild(el);
+    });
+    if(!p.children.length) p.innerHTML='<div class="empty-hint">Все обрывки использованы</div>';
+  }
+  function renderSigns(){
+    const s=$('signsList'); s.innerHTML='';
+    signOrder.forEach((sg,i)=>{
+      const el=document.createElement('div');
+      el.className='sign-item'+(signsSel.includes(i)?' sel':'');
+      el.innerHTML=`<span class="cb">${signsSel.includes(i)?'✓':''}</span><span>${sg.t}</span>`;
+      el.onclick=()=>{
+        if(signsSel.includes(i)) signsSel=signsSel.filter(x=>x!==i);
+        else signsSel.push(i);
+        renderSigns();
+      };
+      s.appendChild(el);
+    });
+  }
+
+  openM('Испытание комнаты 1', '', [
+    {l:'Отмена',cls:'ghost',fn:()=>{closeM();renderRoom();}},
+    {l:'Проверить',fn:()=>{
+      if(selected.length<4){ toast('Мало обрывков','Нужно минимум 4 верных',true); return; }
+      const selTexts = selected.map(i=>fragOrder[i].t);
+      const selOk = selTexts.every(t=>d.fragments.find(f=>f.t===t).ok);
+      const orderOk = selTexts.length===4 && selTexts.every((t,k)=>t===expectedTexts[k]);
+      const signsOk = signsSel.length>=4 && signsSel.every(i=>signOrder[i].ok);
+      if(!selOk){ failClose('Среди выбранных обрывков есть ложные: они противоречат признакам научного знания.'); return; }
+      if(!orderOk){ failClose('Порядок нарушен. Определение должно идти: что это → как получено → на что направлено → что даёт.'); return; }
+      if(!signsOk){ failClose('Среди отмеченных признаков есть ложные (авторитетность, неопровержимость, личная убеждённость — это не признаки научности).'); return; }
+      successClose(q);
+    }}
+  ], true);
+  render();
+}
+
+/* ============================================================
+   C2: BUCKETS — разложить карточки по корзинам (DnD)
+   ============================================================ */
+
+function chBuckets(q){
+  const d=q.ch;
+  const cardOrder = shuffle(d.cards.map((c,i)=>({...c,_i:i})));
+  let place = cardOrder.map(()=>-1); // bucket index for each card in cardOrder
+
+  function render(){
+    let html=`<div class="ch-head"><div class="qn">Испытание · раскладка по корзинам</div>
+      <div class="qt">Разложите карточки по трём корзинам: нормы идеала, исторические эталоны, ложные утверждения.</div></div>
+      <p class="ch-hint">Перетащите карточку в нужную корзину. Или кликните по карточке, затем по корзине. Клик по карточке в корзине возвращает её в пул.</p>
+      <div class="buckets" id="buckets"></div>
+      <p class="ch-hint">Карточки:</p>
+      <div class="card-pool" id="cardPool"></div>`;
+    $('mBody').innerHTML=html;
+    renderBuckets(); renderPool();
+  }
+  function renderBuckets(){
+    const b=$('buckets'); b.innerHTML='';
+    d.buckets.forEach((name,bi)=>{
+      const el=document.createElement('div');
+      el.className='bucket';
+      el.innerHTML=`<div class="bt">${name}</div><div class="bz" data-b="${bi}"></div>`;
+      const z=el.querySelector('.bz');
+      cardOrder.forEach((c,ci)=>{
+        if(place[ci]!==bi) return;
+        const item=document.createElement('div');
+        item.className='bi';
+        item.textContent=c.t;
+        item.onclick=()=>{ place[ci]=-1; renderBuckets(); renderPool(); };
+        z.appendChild(item);
+      });
+      allowDrop(el, payload=>{
+        if(payload.type==='card'){ place[payload.idx]=bi; renderBuckets(); renderPool(); }
+      });
+      b.appendChild(el);
+    });
+  }
+  function renderPool(){
+    const p=$('cardPool'); p.innerHTML='';
+    let any=false;
+    cardOrder.forEach((c,ci)=>{
+      if(place[ci]!==-1) return;
+      any=true;
+      const el=document.createElement('div');
+      el.className='card-chip';
+      el.textContent=c.t;
+      setDrag(el,{type:'card',idx:ci});
+      el.onclick=()=>{
+        // fallback: клик по карточке, затем по корзине — без active достаточно просто
+        // используем active через замыкание
+        activeCard = (activeCard===ci ? -1 : ci);
+        renderPool();
+      };
+      p.appendChild(el);
+    });
+    if(!any) p.innerHTML='<div class="empty-hint">Все карточки разложены</div>';
+  }
+
+  let activeCard=-1;
+  // переопределим рендер пула, чтобы поддержать active
+  const origRenderPool = renderPool;
+  renderPool = function(){
+    const p=$('cardPool'); p.innerHTML='';
+    let any=false;
+    cardOrder.forEach((c,ci)=>{
+      if(place[ci]!==-1) return;
+      any=true;
+      const el=document.createElement('div');
+      el.className='card-chip'+(activeCard===ci?' sel':'');
+      el.textContent=c.t;
+      setDrag(el,{type:'card',idx:ci});
+      el.onclick=()=>{ activeCard = (activeCard===ci ? -1 : ci); renderPool(); };
+      p.appendChild(el);
+    });
+    if(!any) p.innerHTML='<div class="empty-hint">Все карточки разложены</div>';
+  };
+  // корзины: клик по зоне при activeCard
+  const origRenderBuckets = renderBuckets;
+  renderBuckets = function(){
+    const b=$('buckets'); b.innerHTML='';
+    d.buckets.forEach((name,bi)=>{
+      const el=document.createElement('div');
+      el.className='bucket';
+      el.innerHTML=`<div class="bt">${name}</div><div class="bz" data-b="${bi}"></div>`;
+      const z=el.querySelector('.bz');
+      cardOrder.forEach((c,ci)=>{
+        if(place[ci]!==bi) return;
+        const item=document.createElement('div');
+        item.className='bi';
+        item.textContent=c.t;
+        item.onclick=()=>{ place[ci]=-1; renderBuckets(); renderPool(); };
+        z.appendChild(item);
+      });
+      allowDrop(el, payload=>{
+        if(payload.type==='card'){ place[payload.idx]=bi; renderBuckets(); renderPool(); }
+      });
+      el.onclick=(e)=>{
+        if(activeCard>=0){
+          place[activeCard]=bi; activeCard=-1; renderBuckets(); renderPool();
+        }
+      };
+      b.appendChild(el);
+    });
+  };
+
+  openM('Испытание комнаты 2','',[
+    {l:'Отмена',cls:'ghost',fn:()=>{closeM();renderRoom();}},
+    {l:'Проверить',fn:()=>{
+      if(place.some(p=>p===-1)){ toast('Не все разложены','Вернитесь к раскладке',true); return; }
+      let bad=0, badNames=[];
+      cardOrder.forEach((c,ci)=>{ if(place[ci]!==c.b){ bad++; badNames.push(c.t); } });
+      if(bad){ failClose('Есть ошибки в раскладке: '+badNames.slice(0,3).join(', ')+(bad>3?'…':'')+'. Проверьте, что норма — это требование к исследованию, эталон — исторический образец, а ложь — то, что противоречит идеалу.'); return; }
+      successClose(q);
+    }}
+  ], true);
+  render();
+}
+
+/* ============================================================
+   C3: SCHEMES — восстановить две классификации (DnD)
+   ============================================================ */
+
+function chSchemes(q){
+  const d=q.ch;
+  let slots=[];
+  d.schemes.forEach((sch,si)=>{
+    sch.slots.forEach((sl,li)=>{
+      slots.push({si,li,label:sl.label,ans:sl.ans,filled:-1});
+    });
+  });
+  const cardOrder = shuffle(d.cards.map((t,i)=>({t,_i:i})));
+  let pool = cardOrder.map(()=>({used:false}));
+  let active=-1;
+  let extraSel=-1;
+
+  function render(){
+    let html=`<div class="ch-head"><div class="qn">Испытание · две классификации</div>
+      <div class="qt">Восстановите две схемы типов рациональности. Перетащите карточки в правильные ячейки.</div></div>
+      <p class="ch-hint">Перетащите карточку в ячейку (или кликните по карточке, затем по ячейке). Карточку-пример отложите в сторону (она не входит в схемы).</p>
+      <div class="schemes" id="schemes"></div>
+      <p class="ch-hint">Карточки:</p>
+      <div class="card-pool-c3" id="pool"></div>
+      <p class="ch-hint" style="margin-top:.9rem">${d.extraQuestion}</p>
+      <div class="crit-checks" id="extraOpts"></div>`;
+    $('mBody').innerHTML=html;
+    renderSchemes(); renderPool(); renderExtra();
+  }
+  function renderSchemes(){
+    const s=$('schemes'); s.innerHTML='';
+    d.schemes.forEach((sch,si)=>{
+      const el=document.createElement('div');
+      el.className='scheme';
+      el.innerHTML=`<div class="st">${sch.name}</div><div class="slots" data-si="${si}"></div>`;
+      const sl=el.querySelector('.slots');
+      slots.forEach((slot,idx)=>{
+        if(slot.si!==si) return;
+        const div=document.createElement('div');
+        div.className='slot'+(slot.filled>=0?' filled':'');
+        div.innerHTML=`<div class="sl">${slot.label}</div>
+          <div class="sv ${slot.filled<0?'miss':''}">${slot.filled>=0?cardOrder[slot.filled].t:'— пусто —'}</div>`;
+        div.onclick=()=>{
+          if(active>=0){
+            if(slot.filled>=0){ pool[slot.filled].used=false; }
+            slot.filled=active; pool[active].used=true; active=-1;
+            renderSchemes(); renderPool();
+          } else if(slot.filled>=0){
+            pool[slot.filled].used=false; slot.filled=-1;
+            renderSchemes(); renderPool();
+          }
+        };
+        allowDrop(div, payload=>{
+          if(payload.type==='card'){
+            const ci=payload.idx;
+            if(slot.filled>=0) pool[slot.filled].used=false;
+            slot.filled=ci; pool[ci].used=true;
+            active=-1;
+            renderSchemes(); renderPool();
+          }
+        });
+        sl.appendChild(div);
+      });
+      s.appendChild(el);
+    });
+  }
+  function renderPool(){
+    const p=$('pool'); p.innerHTML='';
+    let any=false;
+    pool.forEach((c,i)=>{
+      if(c.used) return;
+      any=true;
+      const el=document.createElement('div');
+      el.className='card-chip'+(active===i?' sel':'');
+      el.textContent=cardOrder[i].t;
+      setDrag(el,{type:'card',idx:i});
+      el.onclick=()=>{ active=(active===i?-1:i); renderPool(); renderSchemes(); };
+      p.appendChild(el);
+    });
+    if(!any) p.innerHTML='<div class="empty-hint">Все карточки разложены</div>';
+  }
+  function renderExtra(){
+    const e=$('extraOpts'); e.innerHTML='';
+    d.extraOpts.forEach((o,i)=>{
+      const el=document.createElement('div');
+      el.className='crit-check'+(extraSel===i?' sel':'');
+      el.innerHTML=`<span class="cb">${extraSel===i?'✓':''}</span><span>${o.t}</span>`;
+      el.onclick=()=>{ extraSel=i; renderExtra(); };
+      e.appendChild(el);
+    });
+  }
+
+  openM('Испытание комнаты 3','',[
+    {l:'Отмена',cls:'ghost',fn:()=>{closeM();renderRoom();}},
+    {l:'Проверить',fn:()=>{
+      let bad=[];
+      slots.forEach(sl=>{
+        if(sl.filled<0){ bad.push('пустая ячейка '+sl.label); return; }
+        if(cardOrder[sl.filled].t !== sl.ans){ bad.push(sl.label+' → '+cardOrder[sl.filled].t); }
+      });
+      const exampleLeft = pool.find((p,i)=>!p.used && cardOrder[i].t===d.exampleCard);
+      if(!exampleLeft) bad.push('карточка «'+d.exampleCard+'» — это пример, а не тип, её нельзя класть в схему');
+      if(bad.length){ failClose('Ошибки: '+bad.slice(0,3).join('; ')+(bad.length>3?'…':'')+'. Проверьте, что тип, пояснение и пример — разные вещи, а две схемы имеют разные основания.'); return; }
+      if(extraSel<0){ toast('Нет ответа','Выберите, как соотносятся две классификации',true); return; }
+      if(!d.extraOpts[extraSel].ok){ failClose('Утверждение о соотношении классификаций неверно. Это разные основания деления, их нельзя смешивать.'); return; }
+      successClose(q);
+    }}
+  ], true);
+  render();
+}
+
+/* ============================================================
+   C4: CONTRADICTION — найти противоречие (DnD для выбора пары)
+   ============================================================ */
+
+function chContradiction(q){
+  const d=q.ch;
+  const theoryOrder = shuffle(d.theory.map((t,i)=>({t,_i:i})));
+  let sel=[]; // индексы в theoryOrder
+  let critSel=[];
+
+  function render(){
+    let html=`<div class="ch-head"><div class="qn">Испытание · найди противоречие</div>
+      <div class="qt">В этой «теории» есть противоречие. Выберите два утверждения, которые противоречат друг другу, и отметьте, каких логических критериев не хватает.</div></div>
+      <p class="ch-hint">Перетащите одно утверждение на другое, чтобы выбрать пару (или кликните по двум утверждениям).</p>
+      <div class="theory-list" id="theoryList"></div>
+      <p class="ch-hint">Каких логических критериев не хватает теории? (выберите все подходящие)</p>
+      <div class="crit-checks" id="critChecks"></div>`;
+    $('mBody').innerHTML=html;
+    renderTheory(); renderCrit();
+  }
+  function renderTheory(){
+    const l=$('theoryList'); l.innerHTML='';
+    theoryOrder.forEach((t,i)=>{
+      const el=document.createElement('div');
+      el.className='theory-item'+(sel.includes(i)?' sel':'');
+      el.innerHTML=`<span class="mk">${i+1}.</span><span>${t.t}</span>`;
+      setDrag(el,{type:'claim',idx:i});
+      el.onclick=()=>{
+        if(sel.includes(i)) sel=sel.filter(x=>x!==i);
+        else { if(sel.length>=2) sel.shift(); sel.push(i); }
+        renderTheory();
+      };
+      allowDrop(el, payload=>{
+        if(payload.type==='claim' && payload.idx!==i){
+          sel = [payload.idx, i];
+          renderTheory();
+        }
+      });
+      l.appendChild(el);
+    });
+  }
+  function renderCrit(){
+    const c=$('critChecks'); c.innerHTML='';
+    d.crits.forEach((cr,i)=>{
+      const el=document.createElement('div');
+      el.className='crit-check'+(critSel.includes(i)?' sel':'');
+      el.innerHTML=`<span class="cb">${critSel.includes(i)?'✓':''}</span><span>${cr.t}</span>`;
+      el.onclick=()=>{
+        if(critSel.includes(i)) critSel=critSel.filter(x=>x!==i);
+        else critSel.push(i);
+        renderCrit();
+      };
+      c.appendChild(el);
+    });
+  }
+
+  openM('Испытание комнаты 4','',[
+    {l:'Отмена',cls:'ghost',fn:()=>{closeM();renderRoom();}},
+    {l:'Проверить',fn:()=>{
+      if(sel.length!==2){ toast('Нужно два утверждения','Выберите ровно две строки',true); return; }
+      // получаем оригинальные индексы выбранных
+      const orig = sel.map(i=>theoryOrder[i]._i).sort((a,b)=>a-b);
+      const pairOk = d.pairs.some(p=>{
+        const b=p.slice().sort((x,y)=>x-y);
+        return orig[0]===b[0] && orig[1]===b[1];
+      });
+      if(!pairOk){ failClose('Выбранные утверждения не образуют противоречия. Ищите пару, где одно утверждает общее правило, а другое — исключение из него.'); return; }
+      const needMissing = d.crits.filter(c=>c.missing).map(c=>c.t);
+      const selNames = critSel.map(i=>d.crits[i].t);
+      const missingOk = needMissing.every(n=>selNames.includes(n));
+      const extraBad = selNames.some(n=>!needMissing.includes(n));
+      if(!missingOk){ failClose('Не все пропущенные критерии отмечены. Подумайте: если в теории есть противоречие — какой критерий нарушен? А если термины размыты?'); return; }
+      if(extraBad){ failClose('Среди отмеченных критериев есть те, которые в этой теории как раз соблюдены.'); return; }
+      successClose(q);
+    }}
+  ], true);
+  render();
+}
+
+/* ============================================================
+   C5: FALSIFY — опровергни или признай ненаучным (клики + текст)
+   ============================================================ */
+
+function chFalsify(q){
+  const d=q.ch;
+  const claimsOrder = shuffle(d.claims.map((c,i)=>({...c,_i:i})));
+  let st = claimsOrder.map(()=>({choice:null,text:''}));
+
+  function render(){
+    let html=`<div class="ch-head"><div class="qn">Испытание · опровержимость</div>
+      <div class="qt">Для каждого утверждения решите: опровержимо ли оно? Если да — придумайте контрпример. Если нет — объясните, почему его нельзя проверить научно.</div></div>
+      <div class="claims-list" id="claimsList"></div>`;
+    $('mBody').innerHTML=html;
+    renderClaims();
+  }
+  function renderClaims(){
+    const l=$('claimsList'); l.innerHTML='';
+    claimsOrder.forEach((c,i)=>{
+      const box=document.createElement('div');
+      box.className='claim-box';
+      box.innerHTML=`<div class="ct"><b>${i+1}.</b> ${c.t}</div>
+        <div class="row">
+          <button data-c="yes" class="${st[i].choice==='yes'?'sel':''}">Опровержимо</button>
+          <button data-c="no" class="${st[i].choice==='no'?'sel':''}">Неопровержимо</button>
+        </div>
+        <textarea placeholder="${st[i].choice==='yes'?'Придумайте контрпример...':st[i].choice==='no'?'Объясните, почему нельзя проверить...':'Сначала выберите тип'}" ${st[i].choice?'':'disabled'}>${st[i].text}</textarea>
+        <div class="mini-cnt">${st[i].text.trim().length} / 40</div>`;
+      box.querySelectorAll('.row button').forEach(b=>{
+        b.onclick=()=>{ st[i].choice=b.dataset.c; renderClaims(); };
+      });
+      const ta=box.querySelector('textarea');
+      ta.addEventListener('input',()=>{ st[i].text=ta.value; box.querySelector('.mini-cnt').textContent=ta.value.trim().length+' / 40'; });
+      ta.addEventListener('paste',e=>{e.preventDefault(); toast('Запрещено','Вставка отключена',true);});
+      l.appendChild(box);
+    });
+  }
+
+  openM('Испытание комнаты 5','',[
+    {l:'Отмена',cls:'ghost',fn:()=>{closeM();renderRoom();}},
+    {l:'Проверить',fn:()=>{
+      for(let i=0;i<claimsOrder.length;i++){
+        if(!st[i].choice){ toast('Не все решены','Отметьте тип каждого утверждения',true); return; }
+        const c=claimsOrder[i];
+        const isFals = st[i].choice==='yes';
+        if(isFals !== c.falsifiable){ failClose('Утверждение «'+c.t+'» определено неверно. Подумайте: можно ли представить наблюдение, которое его опровергнет?'); return; }
+        if(st[i].text.trim().length<40){ toast('Мало текста','Объяснение должно быть не короче 40 символов (утверждение '+(i+1)+')',true); return; }
+        if(isFals && !/пример|лебед|металл|наблюд|контрпример|найти|обнаруж/i.test(st[i].text)){ failClose('Для опровержимого утверждения нужен конкретный контрпример. Опишите, какое наблюдение его опровергнет.'); return; }
+        if(!isFals && !/нельзя|невозможно|тавтолог|не оставляет|любой исход|не провер/i.test(st[i].text)){ failClose('Для неопровержимого утверждения объясните, почему никакое наблюдение не может его опровергнуть.'); return; }
+      }
+      successClose(q);
+    }}
+  ], true);
+  render();
+}
+
+/* ============================================================
+   C6: RATING — оценить две теории + вывод (клики/оценки)
+   ============================================================ */
+
+function chRating(q){
+  const d=q.ch;
+  let ratings = d.theories.map(()=>d.criteria.map(()=>0));
+  let concl='';
+
+  function render(){
+    let html=`<div class="ch-head"><div class="qn">Испытание · красота теории</div>
+      <div class="qt">Оцените две конкурирующие теории по четырём критериям красоты (1–5). Затем напишите вывод: какая красивее и почему красота не делает её истинной.</div></div>
+      <div class="theories-compare" id="thCompare"></div>
+      <p class="ch-hint">Вывод (минимум 80 символов, обязательно упомяните, что красота <b>не доказывает</b> истинность):</p>
+      <textarea id="thConclusion" placeholder="Красивее теория ..., потому что ... Но красота не доказывает истинность: ...">${concl}</textarea>
+      <div class="mini-cnt" id="thCnt" style="font-size:.7rem;color:var(--muted);text-align:right">${concl.trim().length} / 80</div>`;
+    $('mBody').innerHTML=html;
+    renderCompare();
+    const ta=$('thConclusion');
+    ta.addEventListener('input',()=>{ concl=ta.value; $('thCnt').textContent=concl.trim().length+' / 80'; });
+    ta.addEventListener('paste',e=>{e.preventDefault();toast('Запрещено','Вставка отключена',true);});
+  }
+  function renderCompare(){
+    const c=$('thCompare'); c.innerHTML='';
+    d.theories.forEach((th,ti)=>{
+      const el=document.createElement('div');
+      el.className='th-card';
+      el.innerHTML=`<div class="tt">${th.t}</div><div class="td">${th.d}</div>`;
+      d.criteria.forEach((cr,ci)=>{
+        const row=document.createElement('div');
+        row.className='rate-row';
+        row.innerHTML=`<span class="rl">${cr}</span><span class="stars">`+
+          [1,2,3,4,5].map(n=>`<span data-t="${ti}" data-c="${ci}" data-n="${n}" class="${ratings[ti][ci]>=n?'on':''}">★</span>`).join('')+
+          `</span>`;
+        el.appendChild(row);
+      });
+      c.appendChild(el);
+    });
+    c.querySelectorAll('.stars span').forEach(s=>{
+      s.onclick=()=>{ ratings[+s.dataset.t][+s.dataset.c]=+s.dataset.n; renderCompare(); };
+    });
+  }
+
+  openM('Испытание комнаты 6','',[
+    {l:'Отмена',cls:'ghost',fn:()=>{closeM();renderRoom();}},
+    {l:'Проверить',fn:()=>{
+      for(let ti=0;ti<ratings.length;ti++) for(let ci=0;ci<ratings[ti].length;ci++){
+        if(ratings[ti][ci]===0){ toast('Не все оценки','Поставьте оценку по каждому критерию для обеих теорий',true); return; }
+      }
+      const sumA=ratings[0].reduce((a,b)=>a+b,0);
+      const sumB=ratings[1].reduce((a,b)=>a+b,0);
+      if(sumB<=sumA){ failClose('По материалу комнаты гелиоцентрическая теория проще, симметричнее и объясняет больше. Оцените её выше по большинству критериев.'); return; }
+      if(concl.trim().length<80){ toast('Мало текста','Вывод — минимум 80 символов',true); return; }
+      const low=concl.toLowerCase();
+      if(!/красот|простот|симметр|элегантн|объяснительн/.test(low)){ failClose('В выводе нужно объяснить, какая теория красивее — через критерии красоты.'); return; }
+      if(!/не доказ|не гарант|не замен|может противореч|должна сочетаться|не является доказательством/.test(low)){
+        failClose('В выводе обязательно должна быть оговорка: красота не доказывает истинность теории.'); return;
+      }
+      successClose(q);
+    }}
+  ], true);
+  render();
+}
+
+/* ============================================================
+   C7: PAIRS — сопоставить теорию и практику + оговорка (DnD)
+   ============================================================ */
+
+function chPairs(q){
+  const d=q.ch;
+  const theoriesOrder = shuffle(d.theories.map((t,i)=>({...t,_i:i})));
+  const optionsOrder = shuffle(d.options.map((o,i)=>({o,_i:i})));
+  let sel = theoriesOrder.map(()=>-1); // index in optionsOrder
+  let concl='';
+  let activeOpt=-1;
+
+  function render(){
+    let html=`<div class="ch-head"><div class="qn">Испытание · теория и практика</div>
+      <div class="qt">Сопоставьте каждую теорию с её практическим следствием. Одна пара — ложная: практика работала, но теория была опровергнута. Найдите её и объясните в выводе.</div></div>
+      <p class="ch-hint">Перетащите следствие на теорию (или кликните по следствию, затем по теории).</p>
+      <div class="pairs-list" id="pairsList"></div>
+      <p class="ch-hint">Вывод (минимум 80 символов): какая пара ложная и почему практика <b>не гарантирует</b> истинности?</p>
+      <textarea id="pairsConcl" placeholder="Ложная пара — ... Потому что ... Практика не гарантирует истинности, так как ...">${concl}</textarea>
+      <div class="mini-cnt" id="pairsCnt" style="font-size:.7rem;color:var(--muted);text-align:right">${concl.trim().length} / 80</div>`;
+    $('mBody').innerHTML=html;
+    renderPairs();
+    const ta=$('pairsConcl');
+    ta.addEventListener('input',()=>{ concl=ta.value; $('pairsCnt').textContent=concl.trim().length+' / 80'; });
+    ta.addEventListener('paste',e=>{e.preventDefault();toast('Запрещено','Вставка отключена',true);});
+  }
+  function renderPairs(){
+    const l=$('pairsList'); l.innerHTML='';
+    // пул доступных следствий
+    const used = new Set(sel.filter(x=>x>=0));
+    const poolRow = document.createElement('div');
+    poolRow.className='pair-row';
+    poolRow.style.gridTemplateColumns='1fr';
+    poolRow.innerHTML=`<div class="card-pool" id="optPool" style="margin:0"></div>`;
+    l.appendChild(poolRow);
+    const pool = poolRow.querySelector('#optPool');
+    let any=false;
+    optionsOrder.forEach((o,oi)=>{
+      if(used.has(oi)) return;
+      any=true;
+      const chip=document.createElement('div');
+      chip.className='card-chip'+(activeOpt===oi?' sel':'');
+      chip.textContent=o.o;
+      setDrag(chip,{type:'option',idx:oi});
+      chip.onclick=()=>{ activeOpt=(activeOpt===oi?-1:oi); renderPairs(); };
+      pool.appendChild(chip);
+    });
+    if(!any) pool.innerHTML='<div class="empty-hint">Все следствия распределены</div>';
+
+    theoriesOrder.forEach((th,i)=>{
+      const row=document.createElement('div');
+      row.className='pair-row';
+      const chosen = sel[i]>=0 ? optionsOrder[sel[i]].o : null;
+      row.innerHTML=`<div style="font-size:.82rem;font-weight:500">${th.t}</div>
+        <div class="arr">→</div>
+        <div style="font-size:.78rem;padding:.55rem .7rem;border:1px dashed var(--line);border-radius:8px;cursor:pointer;min-height:2.2rem" class="drop-target">${chosen||'— перетащите следствие —'}</div>`;
+      const target=row.querySelector('.drop-target');
+      if(sel[i]>=0){ target.style.borderStyle='solid'; target.style.borderColor='var(--green)'; }
+      allowDrop(target, payload=>{
+        if(payload.type==='option'){ sel[i]=payload.idx; activeOpt=-1; renderPairs(); }
+      });
+      target.onclick=()=>{
+        if(activeOpt>=0){ sel[i]=activeOpt; activeOpt=-1; renderPairs(); }
+        else if(sel[i]>=0){ sel[i]=-1; renderPairs(); }
+      };
+      l.appendChild(row);
+    });
+  }
+
+  openM('Испытание комнаты 7','',[
+    {l:'Отмена',cls:'ghost',fn:()=>{closeM();renderRoom();}},
+    {l:'Проверить',fn:()=>{
+      if(sel.some(x=>x===-1)){ toast('Не все пары','Сопоставьте каждую теорию',true); return; }
+      for(let i=0;i<theoriesOrder.length;i++){
+        const th=theoriesOrder[i];
+        const chosen=optionsOrder[sel[i]].o;
+        if(chosen!==th.ok){ failClose('Пара для «'+th.t+'» неверна. Проверьте, какое практическое следствие действительно с ней связано.'); return; }
+      }
+      if(concl.trim().length<80){ toast('Мало текста','Вывод — минимум 80 символов',true); return; }
+      const low=concl.toLowerCase();
+      if(!/теплород|ложн|неверн|опроверг/.test(low)){ failClose('В выводе нужно указать ложную пару — теорию теплорода и паровую машину — и объяснить, почему она ложная.'); return; }
+      if(!/не гарант|не доказ|может работать|даже если|но теория|опровергнут/.test(low)){ failClose('В выводе нужна оговорка: практический успех не гарантирует истинности теории.'); return; }
+      successClose(q);
+    }}
+  ], true);
+  render();
+}
+
+/* ============================================================
+   МЕТОДИЧКА
+   ============================================================ */
+
+function openMethod(){
+  const l=$('methodL'); l.innerHTML='';
+  QUESTIONS.forEach(q=>{
+    const done=!!S.answers[q.id];
+    const col=S.collected[q.id];
+    const sect=document.createElement('div');
+    sect.className='sect';
+    sect.innerHTML=`<div class="st">${q.id}. ${q.room} ${done?'✓':''}</div>`;
+    if(done){
+      sect.innerHTML+=`<div class="frag ok">Раздел заполнен</div>`;
+    } else if(col&&(col.def||col.crit.length||col.concl||col.example)){
+      sect.innerHTML+=`<div class="frag">Материал собран, испытание не пройдено</div>`;
+    } else {
+      sect.innerHTML+=`<div class="miss">Не начато</div>`;
+    }
+    l.appendChild(sect);
+  });
+  $('methodD').classList.add('open');
+}
+['bMethodH','bMethodC','bMethodR','bMethodF','bMethodRes'].forEach(id=>{
+  const el=$(id); if(el) el.addEventListener('click',openMethod);
+});
+
+/* ============================================================
+   ФИНАЛ
+   ============================================================ */
+
+$('finalText').addEventListener('input',()=>{
+  const len=$('finalText').value.trim().length;
+  $('finalCnt').textContent=len+' / 3000 (мин. 600)';
+  $('finalCnt').className='cnt'+(len<600?' warn':'');
+  $('submitFinal').disabled=len<600;
+});
+$('finalText').addEventListener('paste',e=>{e.preventDefault();toast('Запрещено','Вставка отключена. Напишите своими словами',true);});
+$('finalText').addEventListener('copy',e=>e.preventDefault());
+$('finalText').addEventListener('cut',e=>e.preventDefault());
+$('openMethodFinal').addEventListener('click',openMethod);
+
+$('submitFinal').addEventListener('click',()=>{
+  const text=$('finalText').value.trim();
+  if(text.length<600){toast('Слишком коротко','Минимум 600 символов',true);return;}
+  const score=scoreFinal(text);
+  S.finalText=text; S.finalScore=score.total;
+  renderResult(score); show('result');
+});
+
+function scoreFinal(text){
+  const low=text.toLowerCase();
+  const blocks={
+    def:/результат познавательной деятельности|особый результат|специальн\w+ метод|наблюдени\w+|эксперимент/.test(low),
+    signs:countSigns(low)>=4,
+    ideal:/идеал|норм\w+|ценност\w+|требовани\w+/.test(low),
+    ration:/классическ|неклассическ|постнеклассическ|дедуктивн|инструментальн|коммуникативн|эволюционн/.test(low),
+    logic:/непротиворечив|полнот|независим|определённост|обоснованност/.test(low),
+    fals:/опровержим|фальсифицируем|поппер|контрпример|лебед/.test(low),
+    beauty:/красот|простот|симметр|элегантн|объяснительн/.test(low)&&/не доказ|не замен|не гарант|должна сочетаться/.test(low),
+    practice:/практик|применим|технолог|ligo|максвелл/.test(low),
+    example:/пример|например|днк|лебед|ligo|максвелл|экосистем|кипени|электромагнит/.test(low),
+    concl:/таким образом|следовательно|итак|главное|отличается от мнения|делает знание научным/.test(low)
+  };
+  let total=0; Object.values(blocks).forEach(v=>{if(v)total++;});
+  return {blocks,total,max:10};
+}
+function countSigns(low){
+  const list=['объективн','рациональн','системн','проверяем','прогностичн','фиксац','целенаправленн','новизн'];
+  let n=0; list.forEach(w=>{if(low.includes(w))n++;}); return n;
+}
+function renderResult(score){
+  const lv=score.total>=10?'Методичка завершена полностью':
+           score.total>=8?'Методичка завершена':
+           score.total>=6?'Методичка завершена частично':'Черновик';
+  const col=score.total>=10?'#d8a840':score.total>=8?'#7aa2ff':score.total>=6?'#4ade80':'#8b9bb0';
+  $('cert').innerHTML=`
+    <div class="seal">🏛️</div>
+    <h2>МЕТОДИЧКА «КРИТЕРИИ ИСТИНЫ»</h2>
+    <div style="font-size:.74rem;color:var(--muted);margin-bottom:.4rem">Институт методологии науки</div>
+    <div class="who">${S.name}</div>
+    <div class="lv" style="background:${col}">${lv}</div>
+    <div class="meta">
+      Разделов собрано: 7/7<br>
+      Смысловых блоков: ${score.total}/10<br>
+      Дата: ${new Date().toLocaleString('ru-RU')}<br><br>
+      <em style="font-family:'Cormorant Garamond',serif;font-size:1rem;color:#d8d0b0">
+        «Научное знание — это готовность искать основания,<br>
+        проверять идеи и менять мнение, если факты говорят об обратном.»
+      </em>
+    </div>`;
+  const labels={def:'Определение научного знания',signs:'Признаки (≥ 4)',ideal:'Идеал исследования',ration:'Типы рациональности',logic:'Логические критерии',fals:'Опровержимость (Поппер)',beauty:'Красота теории + оговорка',practice:'Практика',example:'Пример',concl:'Вывод'};
+  const ul=$('checkList'); ul.innerHTML='';
+  Object.keys(labels).forEach(k=>{
+    const ok=score.blocks[k];
+    const li=document.createElement('li');
+    li.innerHTML=`<span class="${ok?'ok':'no'}">${ok?'✓':'✗'}</span><span>${labels[k]}</span>`;
+    ul.appendChild(li);
+  });
+}
+
+$('dl').addEventListener('click',()=>{
+  let doc=`МЕТОДИЧКА «КРИТЕРИИ ИСТИНЫ»
+Институт методологии науки
+Автор: ${S.name}
+Научный руководитель: проф. Э. Вейн
+Дата: ${new Date().toLocaleString('ru-RU')}
+
+========================================
+
+`;
+  QUESTIONS.forEach(q=>{
+    doc+=`РАЗДЕЛ ${q.id}. ${q.room.toUpperCase()}
+Вопрос: ${q.q}
+Статус: ${S.answers[q.id]?'пройдено':'не пройдено'}
+
+----------------------------------------
+`;
+  });
+  doc+=`ИТОГОВЫЙ РАЗДЕЛ
+«Что такое научное знание и чем оно отличается от мнения?»
+
+${S.finalText}
+
+========================================
+ОЦЕНКА: ${S.finalScore}/10
+`;
+  const blob=new Blob([doc],{type:'text/plain;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`Методичка_${S.name.replace(/\s/g,'_')}.txt`;
+  a.click(); URL.revokeObjectURL(url);
+});
+</script>
+</body>
+</html>
